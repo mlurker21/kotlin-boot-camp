@@ -9,7 +9,7 @@ val alphabet = setOf("Alfa", "Bravo", "Charlie", "Delta", "Echo", "Foxtrot", "Go
  * A mapping for english characters to phonetic alphabet.
  * [ a -> Alfa, b -> Bravo, ...]
  */
-val association: Map<Char, String> = TODO()
+val association: Map<Char, String> = alphabet.associate { it[0].toLowerCase() to it }
 
 /**
  * Extension function for String which encode it according to `association` mapping
@@ -18,15 +18,15 @@ val association: Map<Char, String> = TODO()
  *
  * Example:
  * "abc".encode() == "AlfaBravoCharlie"
- *
+ *fold()
  */
-fun String.encode(): String = TODO()
+fun String.encode(): String = map { it.toLowerCase() }. map { association[it] ?: it }.joinToString("")
 
 /**
  * A reversed mapping for association
  * [ alpha -> a, bravo -> b, ...]
  */
-val reversedAssociation: Map<String, Char> = TODO()
+val reversedAssociation: Map<String, Char> = alphabet.associate { it to it[0].toLowerCase() }
 
 /**
  * Extension function for String which decode it according to `reversedAssociation` mapping
@@ -34,8 +34,23 @@ val reversedAssociation: Map<String, Char> = TODO()
  * @return encoded string or null if it is impossible to decode
  *
  * Example:
- * "alphabravocharlie".decode() == "abc"
+ * "alphabravocharlie".encode() == "abc"
  * "charliee".decode() == null
  *
  */
-fun String.decode(): String? = TODO()
+fun String.decode(): String? {
+    var result = ""
+    var i = 0
+
+    while (i < this.toLowerCase().length) {
+        if (association.containsKey(this[i].toLowerCase())) {
+            val low = this[i].toLowerCase()
+            association.get(this[i].toLowerCase())!!.forEach {
+                if (it == this[i++])
+                else return null
+            }
+            result += low
+        } else result += this[i++]
+    }
+    return result
+}
