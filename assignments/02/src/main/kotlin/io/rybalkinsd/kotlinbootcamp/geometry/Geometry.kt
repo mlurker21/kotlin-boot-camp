@@ -1,29 +1,36 @@
 package io.rybalkinsd.kotlinbootcamp.geometry
 
-/**
- * Entity that can physically intersect, like flame and player
- */
 interface Collider {
     fun isColliding(other: Collider): Boolean
 }
 
-/**
- * 2D point with integer coordinates
- */
-class Point(x: Int, y: Int) : Collider {
-    override fun isColliding(other: Collider): Boolean {
-        TODO("not implemented")
-    }
+data class Point(val x: Int, val y: Int) : Collider {
+    override fun isColliding(other: Collider): Boolean = when (other) {
+                is Point -> other == this
+                is Bar -> other.poinInBar(this)
+                else -> false
+            }
 }
 
-/**
- * Bar is a rectangle, which borders are parallel to coordinate axis
- * Like selection bar in desktop, this bar is defined by two opposite corners
- * Bar is not oriented
- * (It does not matter, which opposite corners you choose to define bar)
- */
-class Bar(firstCornerX: Int, firstCornerY: Int, secondCornerX: Int, secondCornerY: Int) : Collider {
-    override fun isColliding(other: Collider): Boolean {
-        TODO("not implemented")
+class Bar(val firstCornerX: Int, val firstCornerY: Int, val secondCornerX: Int, val secondCornerY: Int) : Collider {
+    override fun isColliding(other: Collider): Boolean = when (other) {
+        is Point -> poinInBar(other)
+        is Bar -> barInBar(other) || other.barInBar(this)
+        else -> false
+    }
+
+    fun barInBar(other: Bar): Boolean =
+            (other.firstCornerX in firstCornerX..secondCornerX || other.secondCornerX in firstCornerX..secondCornerX) &&
+            (other.firstCornerY in firstCornerY..secondCornerY || other.secondCornerY in firstCornerY..secondCornerY)
+
+    fun poinInBar(point: Point): Boolean =
+            point.x in firstCornerX..secondCornerX && point.y in firstCornerY..secondCornerY
+
+    override fun equals(other: Any?): Boolean {
+        if (other is Bar) return(firstCornerX == other.firstCornerX || firstCornerX == other.secondCornerX) &&
+                (secondCornerX == other.firstCornerX || secondCornerX == other.secondCornerX) &&
+                (firstCornerY == other.secondCornerY || firstCornerY == other.firstCornerY) &&
+                (secondCornerY == other.firstCornerY || secondCornerY == other.secondCornerY)
+        else return false
     }
 }
