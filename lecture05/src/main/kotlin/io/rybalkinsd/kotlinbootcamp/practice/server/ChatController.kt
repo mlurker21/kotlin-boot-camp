@@ -19,9 +19,9 @@ class ChatController {
     val usersOnline: MutableMap<String, String> = ConcurrentHashMap()
 
     @RequestMapping(
-        path = ["/login"],
-        method = [RequestMethod.POST],
-        consumes = [MediaType.APPLICATION_FORM_URLENCODED_VALUE]
+            path = ["/login"],
+            method = [RequestMethod.POST],
+            consumes = [MediaType.APPLICATION_FORM_URLENCODED_VALUE]
     )
     fun login(@RequestParam("name") name: String): ResponseEntity<String> = when {
         name.isEmpty() -> ResponseEntity.badRequest().body("Name is too short")
@@ -41,24 +41,64 @@ class ChatController {
      * curl -i localhost:8080/chat/online
      */
     @RequestMapping(
-        path = ["online"],
-        method = [RequestMethod.GET],
-        produces = [MediaType.TEXT_PLAIN_VALUE]
+            path = ["/online"],
+            method = [RequestMethod.GET],
+            produces = [MediaType.TEXT_PLAIN_VALUE]
     )
-    fun online(): ResponseEntity<String> = TODO()
+    fun online() = {
+        if (usersOnline.isEmpty()) ResponseEntity.badRequest().body("No user on-line")
+        else ResponseEntity.ok(usersOnline.values.toList().sortedBy { it.toLowerCase() }.joinToString("\n", "|", "|"))
+    }
 
     /**
      * curl -X POST -i localhost:8080/chat/logout -d "name=I_AM_STUPID"
      */
-    // TODO
+    @RequestMapping(
+            path = ["/logout"],
+            method = [RequestMethod.DELETE],
+            produces = [MediaType.TEXT_PLAIN_VALUE]
+    )
+    fun logout(@RequestParam("name") name: String): ResponseEntity<String> = when {
+        name.isEmpty() -> ResponseEntity.badRequest().body("Name is too short")
+        name.length > 20 -> ResponseEntity.badRequest().body("Name is too long")
+        !usersOnline.contains(name) -> ResponseEntity.badRequest().body("Already logout")
+        else -> {
+            usersOnline.remove(name)
+            messages += "[$name] logout".also { log.info(it) }
+            ResponseEntity.ok().build()
+        }
+    }
 
     /**
      * curl -X POST -i localhost:8080/chat/say -d "name=I_AM_STUPID&msg=Hello everyone in this chat"
      */
-    // TODO
+    @RequestMapping(
+            path = ["/say"],
+            method = [RequestMethod.DELETE],
+            produces = [MediaType.TEXT_PLAIN_VALUE]
+    )
+    fun say(@RequestParam("name") name: String, @RequestParam("msg") msg: String): ResponseEntity<String> = when {
+        name.isEmpty() -> ResponseEntity.badRequest().body("Name is too short")
+        name.length > 20 -> ResponseEntity.badRequest().body("Name is too long")
+        !usersOnline.contains(name) -> ResponseEntity.badRequest().body("Please, logged in")
+        msg.isEmpty() -> ResponseEntity.badRequest().body("Please, write anything")
+        msg.length > 140 -> ResponseEntity.badRequest().body("Message is too long")
+        else -> {
+            messages += "[$name] $msg".also { log.info(it) }
+            ResponseEntity.ok().build()
+        }
+    }
 
     /**
      * curl -i localhost:8080/chat/chat
      */
-    // TODO
+    @RequestMapping(
+            path = ["/history"],
+            method = [RequestMethod.DELETE],
+            produces = [MediaType.TEXT_PLAIN_VALUE]
+    )
+    fun history() = {
+        if (usersOnline.isEmpty()) ResponseEntity.badRequest().body("No user on-line")
+        else ResponseEntity.ok(messages.toList().sortedBy { it.toLowerCase() }.joinToString("\n", "[", "]"))
+    }
 }
